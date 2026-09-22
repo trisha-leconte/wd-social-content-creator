@@ -2,10 +2,12 @@ import Link from "next/link";
 import { dbConnect } from "@/lib/db";
 import StrategyProfile from "@/models/StrategyProfile";
 import { EditableList } from "@/components/EditableList";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function StrategyPage() {
+  await requireUserId();
   await dbConnect();
   const profile = await StrategyProfile.findOne({ singleton: "the-one" }).lean();
   if (!profile) {

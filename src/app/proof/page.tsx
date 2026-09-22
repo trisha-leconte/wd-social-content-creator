@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getProofCandidates } from "@/lib/wealthdaily/source";
 import { isConnected } from "@/lib/wealthdaily/client";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProofPage() {
+  await requireUserId();
   const proof = await getProofCandidates();
 
   return (

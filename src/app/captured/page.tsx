@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function CapturedPage() {
+  await requireUserId();
   await dbConnect();
   const posts = await Post.find({ status: "captured" }).sort({ createdAt: -1 }).lean();
 

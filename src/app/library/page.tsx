@@ -3,10 +3,12 @@ import { dbConnect } from "@/lib/db";
 import Bucket from "@/models/Bucket";
 import Series from "@/models/Series";
 import StrategyProfile from "@/models/StrategyProfile";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function LibraryPage() {
+  await requireUserId();
   await dbConnect();
   const [buckets, series, profile] = await Promise.all([
     Bucket.find().sort({ targetPercent: -1 }).lean(),

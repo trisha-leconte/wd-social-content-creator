@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
 import WeeklySlot from "@/models/WeeklySlot";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function NewPostPage({
 }: {
   searchParams: Promise<{ slot?: string; date?: string }>;
 }) {
+  await requireUserId();
   const { slot, date } = await searchParams;
   if (!slot) redirect("/");
 

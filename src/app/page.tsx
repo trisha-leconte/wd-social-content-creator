@@ -2,10 +2,12 @@ import Link from "next/link";
 import { todayView } from "@/lib/today";
 import { MixBar } from "@/components/MixBar";
 import { SlotCard } from "@/components/SlotCard";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
+  await requireUserId();
   const view = await todayView();
   const today = new Date();
 

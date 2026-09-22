@@ -2,10 +2,12 @@ import Link from "next/link";
 import { getCoverageGaps, getDeckCatalogue } from "@/lib/wealthdaily/source";
 import { isConnected } from "@/lib/wealthdaily/client";
 import { postedProductIds } from "@/lib/posts";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function CoveragePage() {
+  await requireUserId();
   const [all, gaps] = await Promise.all([getDeckCatalogue(), getCoverageGaps(await postedProductIds())]);
   const gapIds = new Set(gaps.map((g) => g.productId));
 

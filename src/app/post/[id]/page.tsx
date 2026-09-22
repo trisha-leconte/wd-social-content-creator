@@ -4,10 +4,12 @@ import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
 import { Composer } from "@/components/Composer";
 import type { Lens } from "@/types";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireUserId();
   const { id } = await params;
   await dbConnect();
   const post = await Post.findById(id).lean();

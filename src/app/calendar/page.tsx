@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
+import { requireUserId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ const COLOR: Record<string, string> = {
 };
 
 export default async function CalendarPage() {
+  await requireUserId();
   await dbConnect();
   const start = new Date();
   start.setDate(1);
