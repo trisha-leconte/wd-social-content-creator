@@ -185,8 +185,12 @@ on the `StrategyProfile`**, rendered into every prompt, and editable at
 
 ## 6. The agent
 
-`POST /api/agent/draft`, server-side only, `@anthropic-ai/sdk`,
-`claude-sonnet-5`, structured output via a tool definition.
+`POST /api/agent/draft`, server-side only, `@anthropic-ai/sdk`, model
+`claude-opus-5`, adaptive thinking, and structured output via
+`client.messages.parse()` with `zodOutputFormat` — not a hand-rolled tool
+definition. The stable half of the prompt (strategy brain, bucket, series) is
+marked `cache_control: {type: "ephemeral"}` so repeated drafting in a session
+reuses the cached prefix.
 
 **Prompt assembly** (one module, unit-tested):
 
@@ -219,8 +223,10 @@ supplied returns a `bucketKey` and `seriesKey` alongside the drafts.
 
 One module — `src/lib/wealthdaily/` — is the only code that knows the v2
 Postgres schema. Connects via `WEALTH_DAILY_DATABASE_URL` to a **read-only
-role on the development database**, using `drizzle-orm` + `postgres` with a
-minimal local copy of only the tables read.
+role on the development database**, using the `postgres` client with raw
+tagged-template SQL. Deliberately no Drizzle schema copy: duplicating 2,580
+lines of v2 schema would be a second thing to keep in sync, and `check:source`
+(below) catches drift more cheaply.
 
 ### Why the dev database
 
@@ -305,7 +311,8 @@ created by `npm run seed:admin` from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
 ## 11. Stack and environment
 
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind · Mongoose ·
-`drizzle-orm` + `postgres` (read-only) · `@anthropic-ai/sdk` · Vitest.
+`postgres` (read-only, raw tagged-template SQL — no Drizzle schema copy to
+drift) · `@anthropic-ai/sdk` + `zod` · Vitest.
 
 Two databases, one direction of travel: **Mongo is written, Postgres is only
 read.**
