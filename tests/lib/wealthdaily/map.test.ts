@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { i18n, mapCardRow } from "@/lib/wealthdaily/map";
+import { i18n, mapCardRow, resolveTokens } from "@/lib/wealthdaily/map";
 
 describe("i18n", () => {
   it("reads the English value out of a translation object", () => {
@@ -51,5 +51,46 @@ describe("mapCardRow", () => {
     expect(
       mapCardRow({ activity_id: "a1", product_id: "p1", deck_front: null, instructions: null, title: { en: "T" }, product_title: "P", chapter_title: null }).chapterTitle
     ).toBeNull();
+  });
+});
+
+describe("resolveTokens", () => {
+  it("replaces a personalisation token with its fallback", () => {
+    expect(resolveTokens("Thank {{partner|Them}} Again")).toBe("Thank Them Again");
+    expect(resolveTokens("Hey {{first_name|friend}}")).toBe("Hey friend");
+  });
+
+  it("humanises a token that has no fallback", () => {
+    expect(resolveTokens("Visit {{author_website}}")).toBe("Visit author website");
+  });
+
+  it("handles several tokens in one string", () => {
+    expect(resolveTokens("{{first_name|friend}}, tell {{audience|your people}}")).toBe(
+      "friend, tell your people"
+    );
+  });
+
+  it("leaves text without tokens untouched", () => {
+    expect(resolveTokens("Give a genuine compliment")).toBe("Give a genuine compliment");
+  });
+
+  it("tolerates whitespace inside the braces", () => {
+    expect(resolveTokens("Thank {{ partner | Them }}")).toBe("Thank Them");
+  });
+});
+
+describe("mapCardRow token handling", () => {
+  it("resolves tokens in the card text, so no caption can contain {{...}}", () => {
+    const card = mapCardRow({
+      activity_id: "a1",
+      product_id: "p1",
+      deck_front: { title: { en: "Thank {{partner|Them}} Again" } },
+      instructions: null,
+      title: null,
+      product_title: "100 Little Ways",
+      chapter_title: null,
+    });
+    expect(card.text).toBe("Thank Them Again");
+    expect(card.text).not.toContain("{{");
   });
 });

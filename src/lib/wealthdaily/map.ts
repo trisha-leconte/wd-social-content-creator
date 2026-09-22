@@ -12,6 +12,17 @@ export function i18n(value: unknown): string {
   return "";
 }
 
+/**
+ * Card text carries personalisation tokens the reader's app fills in:
+ * `{{partner|Them}}`, `{{first_name|friend}}`, `{{author_website}}`.
+ * Resolve them here, or the agent writes the raw braces into a caption.
+ */
+export function resolveTokens(text: string): string {
+  return text.replace(/\{\{\s*([^}|]+?)\s*(?:\|\s*([^}]*?)\s*)?\}\}/g, (_, key: string, fallback?: string) =>
+    fallback && fallback.length > 0 ? fallback : key.replace(/_/g, " ")
+  );
+}
+
 export type CardRow = {
   activity_id: string;
   product_id: string;
@@ -30,8 +41,8 @@ export function mapCardRow(row: CardRow): CardCandidate {
   return {
     activityId: row.activity_id,
     productId: row.product_id,
-    text,
+    text: resolveTokens(text),
     productTitle: row.product_title,
-    chapterTitle: chapter === "" ? null : chapter,
+    chapterTitle: chapter === "" ? null : resolveTokens(chapter),
   };
 }
