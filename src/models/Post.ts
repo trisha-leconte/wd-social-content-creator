@@ -1,20 +1,71 @@
-import mongoose, { Schema } from "mongoose";
-import { BUCKET_KEYS, SERIES_KEYS, POST_STATUSES, PLATFORM_KEYS } from "@/types";
+import mongoose, { Schema, type Model } from "mongoose";
+import {
+  BUCKET_KEYS,
+  SERIES_KEYS,
+  POST_STATUSES,
+  PLATFORM_KEYS,
+  type BucketKey,
+  type CardCandidate,
+  type Lens,
+  type PlatformKey,
+  type PostStatus,
+  type SeriesKey,
+} from "@/types";
 
-const GenerationSchema = new Schema(
+export interface IGeneration {
+  createdAt: Date;
+  captions: string[];
+  hooks: string[];
+  cta: string;
+  platformVariants: Record<PlatformKey, string>;
+  suggestedVisual: string;
+  storyVersion: string;
+}
+
+export interface IPost {
+  date?: Date;
+  slotKey?: string;
+  bucketKey: BucketKey;
+  seriesKey?: SeriesKey;
+  lens: Lens;
+  rawNotes: string;
+  sourceCardRef?: CardCandidate;
+  generations: IGeneration[];
+  chosenCaption?: string;
+  platformVariants?: Record<PlatformKey, string>;
+  suggestedVisual?: string;
+  storyVersion?: string;
+  cta?: string;
+  status: PostStatus;
+  postedAt?: Date;
+  platforms?: PlatformKey[];
+}
+
+const GenerationSchema = new Schema<IGeneration>(
   {
     createdAt: { type: Date, default: Date.now },
     captions: [String],
     hooks: [String],
     cta: String,
-    platformVariants: { type: Map, of: String },
+    platformVariants: { type: Object },
     suggestedVisual: String,
     storyVersion: String,
   },
   { _id: false }
 );
 
-const PostSchema = new Schema(
+const CardRefSchema = new Schema<CardCandidate>(
+  {
+    activityId: String,
+    productId: String,
+    text: String,
+    productTitle: String,
+    chapterTitle: String,
+  },
+  { _id: false }
+);
+
+const PostSchema = new Schema<IPost>(
   {
     date: Date,
     slotKey: String,
@@ -22,16 +73,10 @@ const PostSchema = new Schema(
     seriesKey: { type: String, enum: SERIES_KEYS },
     lens: { type: String, enum: ["consumer", "creator"], default: "consumer" },
     rawNotes: { type: String, default: "" },
-    sourceCardRef: {
-      type: new Schema(
-        { activityId: String, productId: String, text: String, productTitle: String, chapterTitle: String },
-        { _id: false }
-      ),
-      default: undefined,
-    },
+    sourceCardRef: { type: CardRefSchema, default: undefined },
     generations: { type: [GenerationSchema], default: [] },
     chosenCaption: String,
-    platformVariants: { type: Map, of: String, default: undefined },
+    platformVariants: { type: Object, default: undefined },
     suggestedVisual: String,
     storyVersion: String,
     cta: String,
@@ -42,4 +87,4 @@ const PostSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Post || mongoose.model("Post", PostSchema);
+export default (mongoose.models.Post as Model<IPost>) || mongoose.model<IPost>("Post", PostSchema);

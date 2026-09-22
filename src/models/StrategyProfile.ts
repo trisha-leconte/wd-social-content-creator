@@ -1,6 +1,18 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type Model } from "mongoose";
 
-const StrategyProfileSchema = new Schema(
+export interface IStrategyProfile {
+  singleton: string;
+  oneStory: string;
+  audiences?: { who: string; thought: string }[];
+  voiceRules?: string[];
+  doNotList?: string[];
+  ctaRotation?: string[];
+  openerBank?: string[];
+  profileBio?: string;
+  pinnedPosts?: { title: string; brief: string }[];
+}
+
+const StrategyProfileSchema = new Schema<IStrategyProfile>(
   {
     singleton: { type: String, default: "the-one", unique: true },
     oneStory: { type: String, required: true },
@@ -15,5 +27,5 @@ const StrategyProfileSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.StrategyProfile ||
-  mongoose.model("StrategyProfile", StrategyProfileSchema);
+export default (mongoose.models.StrategyProfile as Model<IStrategyProfile>) ||
+  mongoose.model<IStrategyProfile>("StrategyProfile", StrategyProfileSchema);

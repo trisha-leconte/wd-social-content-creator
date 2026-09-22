@@ -1,7 +1,16 @@
-import mongoose, { Schema } from "mongoose";
-import { BUCKET_KEYS } from "@/types";
+import mongoose, { Schema, type Model } from "mongoose";
+import { BUCKET_KEYS, type BucketKey } from "@/types";
 
-const BucketSchema = new Schema({
+export interface IBucket {
+  key: BucketKey;
+  name: string;
+  targetPercent: number;
+  description?: string;
+  whatItIsNot?: string;
+  color?: string;
+}
+
+const BucketSchema = new Schema<IBucket>({
   key: { type: String, enum: BUCKET_KEYS, required: true, unique: true },
   name: { type: String, required: true },
   targetPercent: { type: Number, required: true },
@@ -10,4 +19,5 @@ const BucketSchema = new Schema({
   color: String,
 });
 
-export default mongoose.models.Bucket || mongoose.model("Bucket", BucketSchema);
+export default (mongoose.models.Bucket as Model<IBucket>) ||
+  mongoose.model<IBucket>("Bucket", BucketSchema);
