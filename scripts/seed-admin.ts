@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./env";
 import { dbConnect } from "@/lib/db";
 import User from "@/models/User";
 import { hashPassword } from "@/lib/auth";

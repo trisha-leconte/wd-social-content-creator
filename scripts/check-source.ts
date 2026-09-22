@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./env";
 import { isConnected } from "@/lib/wealthdaily/client";
 import * as source from "@/lib/wealthdaily/source";
 

@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./env";
 import { dbConnect } from "@/lib/db";
 import Bucket from "@/models/Bucket";
 import Series from "@/models/Series";
