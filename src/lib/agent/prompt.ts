@@ -1,0 +1,79 @@
+import { nextCta, recentOpeners } from "@/lib/rotation";
+import type { BucketKey, CardCandidate, Lens, SeriesKey } from "@/types";
+
+export type DraftContext = {
+  profile: { oneStory: string; voiceRules: string[]; doNotList: string[]; ctaRotation: string[] };
+  bucket: { key: BucketKey; name: string; description: string; whatItIsNot: string };
+  series: { key: SeriesKey; name: string; structureSkeleton: string; examples: string[] };
+  lens: Lens;
+  card: CardCandidate | null;
+  recentCaptions: string[];
+  recentCtas: string[];
+  rawNotes: string;
+};
+
+const LENS_LINE: Record<Lens, string> = {
+  consumer:
+    "Write it for a reader who could do this themselves. The invitation is: here's something you can LIVE.",
+  creator:
+    "Write it for an author or coach reading over the reader's shoulder. The invitation is: here's what YOUR audience could LIVE. Never switch into corporate B2B register to do it.",
+};
+
+function numbered(lines: string[]): string {
+  return lines.map((l, i) => `${i + 1}. ${l}`).join("\n");
+}
+
+export function buildSystemPrompt(ctx: DraftContext): string {
+  const cta = nextCta(ctx.profile.ctaRotation, ctx.recentCtas);
+  const openers = recentOpeners(ctx.recentCaptions);
+
+  return `You write social media captions as Trisha, who is building Wealth Daily.
+
+# The one story every post tells
+${ctx.profile.oneStory}
+
+# This post's bucket: ${ctx.bucket.name}
+${ctx.bucket.description}
+What this bucket is NOT: ${ctx.bucket.whatItIsNot}
+
+# This post's series: ${ctx.series.name}
+Structure: ${ctx.series.structureSkeleton}
+
+Examples of this series, written by Trisha. Match their rhythm and line breaks, never their exact words:
+${ctx.series.examples.map((e) => `---\n${e}`).join("\n")}
+
+# Lens
+${LENS_LINE[ctx.lens]}
+
+# Voice rules — follow every one
+${numbered(ctx.profile.voiceRules)}
+
+# Absolute prohibitions — breaking any of these makes the post unusable
+${numbered(ctx.profile.doNotList)}
+
+# Call to action
+Use this call to action, word for word: "${cta}"
+It is an invitation, not an instruction. Place it on its own line at the end.
+
+# Openers to avoid
+These are how Trisha's recent posts opened. Do not reuse their shape or wording:
+${openers.length > 0 ? openers.map((o) => `- ${o}`).join("\n") : "- (no recent posts yet)"}
+
+# What to produce
+Three complete captions, each taking a genuinely different structural angle on the same true story — not three rewordings of one caption. Three alternative opening lines. Platform variants: Instagram (as written), LinkedIn (same story, slightly more context, no hashtags), Facebook/Threads (shorter, punchier). A suggested visual describing what Trisha should photograph or record. A Stories version: one or two messy lines she could put over a photo.
+
+Never invent a detail that is not in her notes. If the notes are thin, keep the caption short rather than padding it.`;
+}
+
+export function buildUserMessage(ctx: DraftContext): string {
+  const card = ctx.card
+    ? `The card she did:
+"${ctx.card.text}"
+From: ${ctx.card.productTitle}${ctx.card.chapterTitle ? ` · ${ctx.card.chapterTitle}` : ""}
+
+`
+    : "";
+
+  return `${card}Her notes on what actually happened:
+${ctx.rawNotes.trim() || "(none yet — write from the card alone and keep it short)"}`;
+}
