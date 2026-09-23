@@ -88,3 +88,33 @@ describe("buildUserMessage", () => {
     expect(buildUserMessage({ ...CTX, card: null })).not.toContain("Love Your Person");
   });
 });
+
+describe("anti-fabrication guardrails", () => {
+  it("puts the invention ban inside the numbered prohibitions, not in trailing prose", () => {
+    const p = buildSystemPrompt(CTX);
+    const prohibitions = p.slice(p.indexOf("# Absolute prohibitions"), p.indexOf("# Call to action"));
+    expect(prohibitions).toMatch(/invent|made up|did not say/i);
+  });
+
+  it("states the invention ban early, not buried at the end", () => {
+    const p = buildSystemPrompt(CTX);
+    const idx = p.search(/invent|did not say/i);
+    expect(idx / p.length).toBeLessThan(0.75);
+  });
+
+  it("tells the model that ______ in an example is a blank for a real detail", () => {
+    const withBlank = {
+      ...CTX,
+      series: { ...CTX.series, examples: ["Today's card told me to ______."] },
+    };
+    const p = buildSystemPrompt(withBlank);
+    expect(p).toMatch(/______/);
+    expect(p).toMatch(/blank|placeholder/i);
+    expect(p).toMatch(/never fill it with|not in her notes|she did not say/i);
+  });
+
+  it("does not mention blanks when no example contains one", () => {
+    const noBlank = { ...CTX, series: { ...CTX.series, examples: ["Did it anyway."] } };
+    expect(buildSystemPrompt(noBlank)).not.toMatch(/is a blank/i);
+  });
+});

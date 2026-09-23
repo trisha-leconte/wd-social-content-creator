@@ -16,11 +16,16 @@ export const DraftSchema = z.object({
 
 export type Draft = z.infer<typeof DraftSchema>;
 
-/** Used by the CLI, where the bucket is not known in advance. */
-export const ClassifiedDraftSchema = DraftSchema.extend({
+/**
+ * Classification only, for the CLI, where the bucket is not known up front.
+ * Deliberately separate from writing: asking one call to both classify and
+ * write means the prompt must be built before the series is known, which
+ * primed the wrong skeleton and produced invented detail.
+ */
+export const ClassificationSchema = z.object({
   bucketKey: z.enum(BUCKET_KEYS),
   seriesKey: z.enum(SERIES_KEYS),
-  classificationReason: z.string(),
+  reason: z.string(),
 });
 
-export type ClassifiedDraft = z.infer<typeof ClassifiedDraftSchema>;
+export type Classification = z.infer<typeof ClassificationSchema>;

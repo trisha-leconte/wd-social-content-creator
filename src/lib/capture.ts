@@ -1,7 +1,7 @@
 import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
 import { buildDraftContext } from "@/lib/posts";
-import { classifyAndDraft } from "@/lib/agent/generate";
+import { classifyStory, generateDraft } from "@/lib/agent/generate";
 
 export async function captureStory(story: string) {
   const rawNotes = story.trim();
@@ -9,21 +9,24 @@ export async function captureStory(story: string) {
 
   await dbConnect();
 
-  // Classification needs a bucket to build a context from; LIVING_IT is the
-  // most common and the model overrides it in its own response.
+  // Sort first, write second. Building the writing prompt before the series
+  // is known primes the wrong skeleton — the model is told to produce beats
+  // the note does not contain, and invents them to satisfy the shape.
+  const sorted = await classifyStory(rawNotes);
+
   const ctx = await buildDraftContext({
-    bucketKey: "LIVING_IT",
-    seriesKey: "TODAY_I_LIVED_IT",
-    lens: "consumer",
+    bucketKey: sorted.bucketKey,
+    seriesKey: sorted.seriesKey,
+    lens: sorted.bucketKey === "BEHIND_THE_WORLD" ? "creator" : "consumer",
     rawNotes,
   });
 
-  const draft = await classifyAndDraft(ctx);
+  const draft = await generateDraft(ctx);
 
   const post = await Post.create({
-    bucketKey: draft.bucketKey,
-    seriesKey: draft.seriesKey,
-    lens: draft.bucketKey === "BEHIND_THE_WORLD" ? "creator" : "consumer",
+    bucketKey: sorted.bucketKey,
+    seriesKey: sorted.seriesKey,
+    lens: sorted.bucketKey === "BEHIND_THE_WORLD" ? "creator" : "consumer",
     rawNotes,
     status: "captured",
     cta: draft.cta,
@@ -35,9 +38,9 @@ export async function captureStory(story: string) {
 
   return {
     postId: String(post._id),
-    bucketKey: draft.bucketKey,
-    seriesKey: draft.seriesKey,
-    reason: draft.classificationReason,
+    bucketKey: sorted.bucketKey,
+    seriesKey: sorted.seriesKey,
+    reason: sorted.reason,
     caption: draft.captions[0],
   };
 }

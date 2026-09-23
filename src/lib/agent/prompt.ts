@@ -23,6 +23,22 @@ function numbered(lines: string[]): string {
   return lines.map((l, i) => `${i + 1}. ${l}`).join("\n");
 }
 
+/**
+ * The single most damaging failure mode: writing a detail Trisha never said.
+ * Her whole movement rests on the evidence being real, so this is prohibition
+ * number one, inside the enforced list rather than trailing prose.
+ */
+const NO_INVENTION =
+  "NEVER write a detail she did not say. No invented card, no invented weather, no invented feeling, no invented place, no invented time of day, no invented object. If her notes do not contain a beat the structure asks for, leave that beat out and write a shorter caption. A short true caption is always better than a longer one with something made up in it.";
+
+/**
+ * Two of the seeded examples are shape templates containing "______".
+ * Without this, "match their rhythm" reads as an instruction to fill the
+ * blank — which is exactly how a fabricated card got into a caption.
+ */
+const BLANK_RULE =
+  "Some examples contain ______. That is a blank standing for a real detail, shown so you can see the shape of the sentence. Fill it only from her notes. If her notes do not say what goes there, do not use that sentence at all — never fill it with something she did not say.";
+
 export function buildSystemPrompt(ctx: DraftContext): string {
   const cta = nextCta(ctx.profile.ctaRotation, ctx.recentCtas);
   const openers = recentOpeners(ctx.recentCaptions);
@@ -41,6 +57,7 @@ Structure: ${ctx.series.structureSkeleton}
 
 Examples of this series, written by Trisha. Match their rhythm and line breaks, never their exact words:
 ${ctx.series.examples.map((e) => `---\n${e}`).join("\n")}
+${ctx.series.examples.some((e) => e.includes("___")) ? `\n${BLANK_RULE}` : ""}
 
 # Lens
 ${LENS_LINE[ctx.lens]}
@@ -49,7 +66,7 @@ ${LENS_LINE[ctx.lens]}
 ${numbered(ctx.profile.voiceRules)}
 
 # Absolute prohibitions — breaking any of these makes the post unusable
-${numbered(ctx.profile.doNotList)}
+${numbered([NO_INVENTION, ...ctx.profile.doNotList])}
 
 # Call to action
 Use this call to action, word for word: "${cta}"
@@ -62,7 +79,7 @@ ${openers.length > 0 ? openers.map((o) => `- ${o}`).join("\n") : "- (no recent p
 # What to produce
 Three complete captions, each taking a genuinely different structural angle on the same true story — not three rewordings of one caption. Three alternative opening lines. Platform variants: Instagram (as written), LinkedIn (same story, slightly more context, no hashtags), Facebook/Threads (shorter, punchier). A suggested visual describing what Trisha should photograph or record. A Stories version: one or two messy lines she could put over a photo.
 
-Never invent a detail that is not in her notes. If the notes are thin, keep the caption short rather than padding it.`;
+If her notes are thin, keep the caption short rather than padding it out.`;
 }
 
 export function buildUserMessage(ctx: DraftContext): string {

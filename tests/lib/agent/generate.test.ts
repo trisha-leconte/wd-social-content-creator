@@ -71,7 +71,7 @@ describe("generateDraft", () => {
   });
 });
 
-describe("classifyAndDraft", () => {
+describe("classifyStory", () => {
   beforeEach(() => {
     parse.mockReset();
     vi.resetModules();
@@ -80,11 +80,32 @@ describe("classifyAndDraft", () => {
 
   it("returns the bucket and series the model chose", async () => {
     parse.mockResolvedValue({
-      parsed_output: { ...GOOD, bucketKey: "LIVING_IT", seriesKey: "TODAY_I_LIVED_IT", classificationReason: "personal evidence" },
+      parsed_output: { bucketKey: "BEHIND_THE_WORLD", seriesKey: "BUILDING_WEALTH_DAILY", reason: "she is shipping" },
     });
-    const { classifyAndDraft } = await import("@/lib/agent/generate");
-    const out = await classifyAndDraft(CTX);
-    expect(out.bucketKey).toBe("LIVING_IT");
-    expect(out.seriesKey).toBe("TODAY_I_LIVED_IT");
+    const { classifyStory } = await import("@/lib/agent/generate");
+    const out = await classifyStory("the site is live");
+    expect(out.bucketKey).toBe("BEHIND_THE_WORLD");
+    expect(out.seriesKey).toBe("BUILDING_WEALTH_DAILY");
+  });
+
+  it("sends no series skeleton or examples — that is the whole point of the split", async () => {
+    parse.mockResolvedValue({
+      parsed_output: { bucketKey: "THE_IDEA", seriesKey: "TRY_THIS", reason: "a belief" },
+    });
+    const { classifyStory } = await import("@/lib/agent/generate");
+    await classifyStory("you don't need more information");
+    const system = parse.mock.calls[0][0].system[0].text;
+    expect(system).not.toMatch(/Assignment → resistance/);
+    expect(system).not.toMatch(/______/);
+    expect(system).toMatch(/Do not write anything/);
+  });
+
+  it("passes the raw note through unchanged", async () => {
+    parse.mockResolvedValue({
+      parsed_output: { bucketKey: "LIVING_IT", seriesKey: "TODAY_I_LIVED_IT", reason: "r" },
+    });
+    const { classifyStory } = await import("@/lib/agent/generate");
+    await classifyStory("penny then twenty");
+    expect(parse.mock.calls[0][0].messages[0].content).toBe("penny then twenty");
   });
 });
