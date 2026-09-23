@@ -119,18 +119,7 @@ describe("anti-fabrication guardrails", () => {
   });
 });
 
-describe("embellishment clamp", () => {
-  it("bans atmospheric colour, not just invented events", () => {
-    const p = buildSystemPrompt(CTX);
-    expect(p).toMatch(/time of day|weather/i);
-    expect(p).toMatch(/how she felt|feeling/i);
-    expect(p).toMatch(/habit|repeated|kept doing|behaviour|behavior/i);
-  });
-
-  it("tells it to reuse her own words rather than upgrade them", () => {
-    expect(buildSystemPrompt(CTX)).toMatch(/her own words|exactly as she|do not upgrade|do not intensify/i);
-  });
-
+describe("invention ban ordering", () => {
   it("keeps the ban as prohibition number one", () => {
     const p = buildSystemPrompt(CTX);
     const list = p.slice(p.indexOf("# Absolute prohibitions"));

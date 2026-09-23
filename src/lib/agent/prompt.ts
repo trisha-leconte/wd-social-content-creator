@@ -29,13 +29,7 @@ function numbered(lines: string[]): string {
  * number one, inside the enforced list rather than trailing prose.
  */
 const NO_INVENTION =
-  [
-    "NEVER write a detail she did not say.",
-    "This covers events and objects — no invented card, place, object or person.",
-    "It equally covers atmosphere: no invented weather, no invented time of day, no invented feeling or reaction of hers, no invented habit or repeated behaviour, no invented sensory detail. \"In the middle of a regular day\" and \"I keep opening it to check\" are both inventions if she did not say them.",
-    "Use her own words wherever she gave you words. Do not upgrade them, do not intensify them, do not make them more vivid. Plain and true beats vivid and embellished.",
-    "If her notes do not contain a beat the structure asks for, leave that beat out and write a shorter caption. A short true caption is always better than a longer one with something made up in it.",
-  ].join(" ");
+  "NEVER write a detail she did not say. No invented card, no invented weather, no invented feeling, no invented place, no invented time of day, no invented object. If her notes do not contain a beat the structure asks for, leave that beat out and write a shorter caption. A short true caption is always better than a longer one with something made up in it.";
 
 /**
  * Two of the seeded examples are shape templates containing "______".
