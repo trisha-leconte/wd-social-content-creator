@@ -34,6 +34,13 @@ export async function buildDraftContext(post: PostLike): Promise<DraftContext> {
       voiceRules: profile.voiceRules ?? [],
       doNotList: profile.doNotList ?? [],
       ctaRotation: profile.ctaRotation ?? [],
+      whyItExists: profile.whyItExists ?? "",
+      beliefs: profile.beliefs ?? [],
+      enemy: profile.enemy ?? "",
+      reader: profile.reader ?? "",
+      whyMine: profile.whyMine ?? "",
+      wordsSheUses: profile.wordsSheUses ?? [],
+      wordsSheNeverUses: profile.wordsSheNeverUses ?? [],
     },
     bucket: {
       key: bucket.key,

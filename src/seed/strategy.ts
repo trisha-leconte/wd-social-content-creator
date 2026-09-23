@@ -167,6 +167,55 @@ export const WEEKLY_SLOTS: {
   { key: "sat", dayOfWeek: 6, label: "BUILDING", bucketKey: "BEHIND_THE_WORLD", defaultSeriesKey: "BUILDING_WEALTH_DAILY" },
 ];
 
+export const BELIEF_PROFILE = {
+  // The reason the brand exists. Stronger than the positioning line, and
+  // Trisha has confirmed it is true and that she will say it publicly.
+  whyItExists:
+    "I didn't build an app to help people read more personal development. I built the thing I needed to start trusting myself again.",
+
+  beliefs: [
+    "You know you have true power when you trust yourself because you've watched yourself do what you said you were going to do.",
+    "Stop trying to convince yourself to believe. Build evidence.",
+    "You show up. You do the thing. You collect proof. You begin trusting yourself. Eventually you don't need someone else to tell you what you're capable of.",
+    "Stop taking everyone's word for what's possible for you. Go create some evidence of your own.",
+    "Knowing something and actually living it are two completely different things.",
+    "I didn't need more information. I needed evidence.",
+  ],
+
+  // What the movement is against. Naming it precisely keeps the agent from
+  // attacking books, courses or the industry, none of which is the target.
+  enemy:
+    "Passive consumption. Knowing without doing. Not books, not courses, not personal development itself — the belief that consuming information is the same thing as changing your life. You can have a bookshelf full of life-changing ideas while your actual Tuesday looks exactly the same. You don't need another book. You need to do something with the fifty you've already read.",
+
+  // One real person, at one real moment. Written so the agent pictures them
+  // instead of an invented customer avatar.
+  reader:
+    "9pm on a bad Tuesday. On the couch with their phone. Tired. They know there's a version of themselves they want to become and they're frustrated because they keep starting things and stopping. They're scrolling Instagram. There's a book near them they started and felt inspired by and haven't done a single thing about. They don't need another breakthrough. They need someone to say: here, do this one tiny thing tonight. Then tomorrow: show up again. A month later they don't have another half-read book — they have thirty pieces of evidence that they're becoming someone different.",
+
+  whyMine:
+    "I stayed behind other people's brands — building their websites, their messages, their ideas. I know how to make other people visible. Saying 'this is mine, I made this, look at it' scared me. So I'm not standing on a stage saying I figured life out, follow me. I'm saying: don't take my word for it. Try it. Live it. Collect your own evidence.",
+
+  // Vocabulary, in her own words. The avoid list is the single highest-value
+  // thing here — it is what separates her voice from generic coach copy.
+  wordsSheUses: [
+    "LIVE IT", "Show up", "Proof", "Evidence", "Trust", "Self-trust", "Become",
+    "Movement", "Experiment", "Experience", "Practice", "Action", "Real", "Daily",
+    "Tiny actions", "Magic", "Powerful", "Build", "Create", "Watch what happens",
+    "Bring it to life", "Stronger together", "Progress",
+    "You already know. Now live it.", "Show up again.", "Build proof.",
+    "Don't just believe you can change. Watch it happen.",
+  ],
+
+  wordsSheNeverUses: [
+    "unlock your potential", "elevate your life", "step into your highest self",
+    "transformative journey", "empower", "holistic", "aligned abundance",
+    "quantum leap", "thought leader ecosystem", "revolutionary platform",
+    "game-changing solution", "embark on a journey",
+    "become the best version of yourself", "actionable insights",
+    "personal growth journey",
+  ],
+};
+
 export const STRATEGY_PROFILE = {
   oneStory:
     "I spent years consuming personal development. Now I'm experimenting with actually living it. I built Wealth Daily to help me do that. I'm inviting other people to LIVE IT with me — and I'm helping authors and coaches turn their teachings into things people can actually practice.",
@@ -196,6 +245,8 @@ export const STRATEGY_PROFILE = {
     "Never write in corporate B2B register. No value propositions, no 'solutions', no 'leverage'.",
     "Never claim a result that did not happen, and never round a small win up into a big one.",
     "Never use hashtag walls. At most a few, and only where they read naturally.",
+    "Never use coach-copy phrases. Trisha closes the tab on these: unlock your potential, elevate your life, step into your highest self, transformative journey, empower, holistic, aligned abundance, quantum leap, thought leader ecosystem, revolutionary platform, game-changing solution, embark on a journey, become the best version of yourself, actionable insights, personal growth journey. If a sentence could appear in any coach's Instagram, rewrite it.",
+    "Never attack books, courses or the personal development industry. The enemy is passive consumption — knowing without doing — not the material itself. She loves the books.",
   ],
   ctaRotation: [
     "Try this today.",

@@ -5,7 +5,7 @@ import Series from "@/models/Series";
 import WeeklySlot from "@/models/WeeklySlot";
 import StrategyProfile from "@/models/StrategyProfile";
 import StoryPrompt from "@/models/StoryPrompt";
-import { BUCKETS, SERIES, WEEKLY_SLOTS, STRATEGY_PROFILE, STORY_PROMPTS } from "@/seed/strategy";
+import { BUCKETS, SERIES, WEEKLY_SLOTS, STRATEGY_PROFILE, BELIEF_PROFILE, STORY_PROMPTS } from "@/seed/strategy";
 
 async function main() {
   await dbConnect();
@@ -14,7 +14,11 @@ async function main() {
   for (const s of SERIES) await Series.updateOne({ key: s.key }, s, { upsert: true });
   for (const w of WEEKLY_SLOTS) await WeeklySlot.updateOne({ key: w.key }, w, { upsert: true });
 
-  await StrategyProfile.updateOne({ singleton: "the-one" }, STRATEGY_PROFILE, { upsert: true });
+  await StrategyProfile.updateOne(
+    { singleton: "the-one" },
+    { ...STRATEGY_PROFILE, ...BELIEF_PROFILE },
+    { upsert: true }
+  );
 
   await StoryPrompt.deleteMany({});
   await StoryPrompt.insertMany(STORY_PROMPTS.map((text) => ({ text })));

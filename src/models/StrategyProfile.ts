@@ -10,6 +10,13 @@ export interface IStrategyProfile {
   openerBank?: string[];
   profileBio?: string;
   pinnedPosts?: { title: string; brief: string }[];
+  whyItExists?: string;
+  beliefs?: string[];
+  enemy?: string;
+  reader?: string;
+  whyMine?: string;
+  wordsSheUses?: string[];
+  wordsSheNeverUses?: string[];
 }
 
 const StrategyProfileSchema = new Schema<IStrategyProfile>(
@@ -23,6 +30,13 @@ const StrategyProfileSchema = new Schema<IStrategyProfile>(
     openerBank: [String],
     profileBio: String,
     pinnedPosts: [{ title: String, brief: String }],
+    whyItExists: String,
+    beliefs: [String],
+    enemy: String,
+    reader: String,
+    whyMine: String,
+    wordsSheUses: [String],
+    wordsSheNeverUses: [String],
   },
   { timestamps: true }
 );

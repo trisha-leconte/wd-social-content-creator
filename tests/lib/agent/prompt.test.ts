@@ -126,3 +126,49 @@ describe("invention ban ordering", () => {
     expect(list).toMatch(/1\. NEVER write a detail she did not say/);
   });
 });
+
+describe("belief profile in the prompt", () => {
+  const RICH: DraftContext = {
+    ...CTX,
+    profile: {
+      ...CTX.profile,
+      whyItExists: "I built the thing I needed to start trusting myself again.",
+      beliefs: ["Stop trying to convince yourself to believe. Build evidence."],
+      enemy: "Passive consumption. Knowing without doing.",
+      reader: "9pm on a bad Tuesday. On the couch with their phone.",
+      whyMine: "I stayed behind other people's brands.",
+      wordsSheUses: ["Show up", "Proof"],
+      wordsSheNeverUses: ["unlock your potential", "quantum leap"],
+    },
+  };
+
+  it("carries why the brand exists", () => {
+    expect(buildSystemPrompt(RICH)).toContain("I built the thing I needed to start trusting myself again.");
+  });
+
+  it("carries her beliefs, the enemy, her reader and why it's hers", () => {
+    const p = buildSystemPrompt(RICH);
+    expect(p).toContain("Build evidence.");
+    expect(p).toContain("Knowing without doing.");
+    expect(p).toContain("9pm on a bad Tuesday");
+    expect(p).toContain("behind other people's brands");
+  });
+
+  it("carries both vocabulary lists", () => {
+    const p = buildSystemPrompt(RICH);
+    expect(p).toContain("Show up · Proof");
+    expect(p).toContain("unlock your potential · quantum leap");
+  });
+
+  it("states who she is before it states the rules", () => {
+    const p = buildSystemPrompt(RICH);
+    expect(p.indexOf("What she believes")).toBeLessThan(p.indexOf("# Voice rules"));
+  });
+
+  it("omits every belief section cleanly when the profile has none", () => {
+    const p = buildSystemPrompt(CTX);
+    expect(p).not.toContain("# What she believes");
+    expect(p).not.toContain("# Why this exists at all");
+    expect(p).not.toMatch(/\n\n\n\n/);
+  });
+});
