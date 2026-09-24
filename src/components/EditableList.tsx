@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildFieldPayload } from "@/lib/fieldPayload";
 
 export function EditableList({ label, field, initial }: { label: string; field: string; initial: string[] }) {
   const [lines, setLines] = useState(initial.join("\n"));
@@ -8,10 +9,12 @@ export function EditableList({ label, field, initial }: { label: string; field: 
 
   async function save() {
     setState("saving");
+    const value = lines.split("\n").map((l) => l.trim()).filter(Boolean);
+    const payload = buildFieldPayload(field, value);
     await fetch("/api/strategy", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: lines.split("\n").map((l) => l.trim()).filter(Boolean) }),
+      body: JSON.stringify(payload),
     });
     setState("saved");
   }

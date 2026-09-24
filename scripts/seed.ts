@@ -5,7 +5,9 @@ import Series from "@/models/Series";
 import WeeklySlot from "@/models/WeeklySlot";
 import StrategyProfile from "@/models/StrategyProfile";
 import StoryPrompt from "@/models/StoryPrompt";
+import BlogProfile from "@/models/BlogProfile";
 import { BUCKETS, SERIES, WEEKLY_SLOTS, STRATEGY_PROFILE, BELIEF_PROFILE, STORY_PROMPTS } from "@/seed/strategy";
+import { BLOG_RULES } from "@/lib/blog/rules";
 
 async function main() {
   await dbConnect();
@@ -20,11 +22,13 @@ async function main() {
     { upsert: true }
   );
 
+  await BlogProfile.updateOne({ singleton: "the-one" }, BLOG_RULES, { upsert: true });
+
   await StoryPrompt.deleteMany({});
   await StoryPrompt.insertMany(STORY_PROMPTS.map((text) => ({ text })));
 
   console.log(
-    `Seeded ${BUCKETS.length} buckets, ${SERIES.length} series, ${WEEKLY_SLOTS.length} slots, ${STORY_PROMPTS.length} story prompts.`
+    `Seeded ${BUCKETS.length} buckets, ${SERIES.length} series, ${WEEKLY_SLOTS.length} slots, ${STORY_PROMPTS.length} story prompts, and the blog rules.`
   );
   process.exit(0);
 }

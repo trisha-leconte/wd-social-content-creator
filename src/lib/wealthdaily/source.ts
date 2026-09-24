@@ -3,7 +3,7 @@ import { mapCardRow, i18n, type CardRow } from "./map";
 import type { CardCandidate } from "@/types";
 
 export type Shipped = { id: string; title: string; isNew: boolean; featured: boolean; comingSoon: boolean };
-export type Deck = { productId: string; title: string; cardCount: number };
+export type Deck = { productId: string; title: string; cardCount: number; slug: string };
 export type Proof = { quote: string; name: string; detail: string | null };
 export type AuthorSignal = { name: string; productTitle: string };
 
@@ -28,15 +28,20 @@ export async function getTodaysCardCandidates(limit = 40): Promise<CardCandidate
 export async function getDeckCatalogue(): Promise<Deck[]> {
   const db = sql();
   if (!db) return [];
-  const rows = await db<{ product_id: string; title: string; card_count: string }[]>`
-    SELECT p.id AS product_id, p.title, count(a.id) AS card_count
+  const rows = await db<{ product_id: string; title: string; slug: string; card_count: string }[]>`
+    SELECT p.id AS product_id, p.title, p.slug, count(a.id) AS card_count
     FROM products p
     LEFT JOIN activities a ON a.product_id = p.id AND a.is_active = true
     WHERE p.status = 'published'
-    GROUP BY p.id, p.title
+    GROUP BY p.id, p.title, p.slug
     ORDER BY p.title
   `;
-  return rows.map((r) => ({ productId: r.product_id, title: r.title, cardCount: Number(r.card_count) }));
+  return rows.map((r) => ({
+    productId: r.product_id,
+    title: r.title,
+    slug: r.slug,
+    cardCount: Number(r.card_count),
+  }));
 }
 
 export async function getRecentlyShipped(): Promise<Shipped[]> {
