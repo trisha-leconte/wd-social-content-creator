@@ -2,11 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { BlogContext, OutlineResult } from "@/lib/blog/prompt";
 
 const parse = vi.fn();
+const stream = vi.fn();
 vi.mock("@anthropic-ai/sdk", () => ({
   default: class {
-    messages = { parse };
+    messages = { parse, stream };
   },
 }));
+
+/** Mirrors the SDK: stream() returns a handle whose finalMessage() resolves. */
+function streamReturning(parsed: unknown) {
+  return { finalMessage: async () => ({ parsed_output: parsed }) };
+}
 
 const CTX: BlogContext = {
   voice: { enemy: "Passive consumption." },
@@ -79,29 +85,59 @@ describe("generateOutline", () => {
 describe("generateArticle", () => {
   beforeEach(() => {
     parse.mockReset();
+    stream.mockReset();
     vi.resetModules();
     process.env.ANTHROPIC_API_KEY = "test-key";
   });
 
+  it("STREAMS rather than using the non-streaming path", async () => {
+    // The SDK throws "Streaming is required for operations that may take
+    // longer than 10 minutes" when a non-streaming request asks for more than
+    // 128000/6 ≈ 21333 max_tokens. An article needs the headroom, so this
+    // call must stream. A non-streaming article call is a production outage.
+    stream.mockReturnValue(streamReturning({ bodyMarkdown: "x".repeat(500), wordCount: 100 }));
+    const { generateArticle } = await import("@/lib/blog/generate");
+    await generateArticle(CTX, OUTLINE);
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(parse).not.toHaveBeenCalled();
+  });
+
+  it("keeps max_tokens above the non-streaming ceiling, which only streaming allows", async () => {
+    stream.mockReturnValue(streamReturning({ bodyMarkdown: "x".repeat(500), wordCount: 100 }));
+    const { generateArticle } = await import("@/lib/blog/generate");
+    await generateArticle(CTX, OUTLINE);
+    expect(stream.mock.calls[0][0].max_tokens).toBeGreaterThan(21333);
+  });
+
+  it("carries the same model, thinking and cache settings as the outline call", async () => {
+    stream.mockReturnValue(streamReturning({ bodyMarkdown: "x".repeat(500), wordCount: 100 }));
+    const { generateArticle } = await import("@/lib/blog/generate");
+    await generateArticle(CTX, OUTLINE);
+    const args = stream.mock.calls[0][0];
+    expect(args.model).toBe("claude-opus-5");
+    expect(args.thinking).toEqual({ type: "adaptive" });
+    expect(args.budget_tokens).toBeUndefined();
+    expect(args.system[0].cache_control).toEqual({ type: "ephemeral" });
+  });
+
   it("returns the markdown body", async () => {
-    parse.mockResolvedValue({ parsed_output: { bodyMarkdown: "# x\n" + "word ".repeat(300), wordCount: 300 } });
+    stream.mockReturnValue(streamReturning({ bodyMarkdown: "# x\n" + "word ".repeat(300), wordCount: 300 }));
     const { generateArticle } = await import("@/lib/blog/generate");
     expect((await generateArticle(CTX, OUTLINE)).wordCount).toBe(300);
   });
 
   it("sends the approved headings in the user message", async () => {
-    parse.mockResolvedValue({ parsed_output: { bodyMarkdown: "x".repeat(500), wordCount: 100 } });
+    stream.mockReturnValue(streamReturning({ bodyMarkdown: "x".repeat(500), wordCount: 100 }));
     const { generateArticle } = await import("@/lib/blog/generate");
     await generateArticle(CTX, OUTLINE);
-    const content = parse.mock.calls[0][0].messages[0].content;
+    const content = stream.mock.calls[0][0].messages[0].content;
     expect(content).toContain("Why nothing changes");
     expect(content).toContain("Collect proof");
   });
 
-  it("streams is not required, but max_tokens is large enough for 2000 words", async () => {
-    parse.mockResolvedValue({ parsed_output: { bodyMarkdown: "x".repeat(500), wordCount: 100 } });
+  it("throws a clear error when the stream yields nothing parseable", async () => {
+    stream.mockReturnValue(streamReturning(null));
     const { generateArticle } = await import("@/lib/blog/generate");
-    await generateArticle(CTX, OUTLINE);
-    expect(parse.mock.calls[0][0].max_tokens).toBeGreaterThanOrEqual(16000);
+    await expect(generateArticle(CTX, OUTLINE)).rejects.toThrow("article");
   });
 });
