@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Post from "@/models/Post";
 import { Composer } from "@/components/Composer";
+import { latestDraft } from "@/lib/latestDraft";
 import type { Lens } from "@/types";
 import { requireUserId } from "@/lib/session";
 
@@ -26,6 +27,8 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         postId={id}
         initialNotes={post.rawNotes ?? ""}
         initialLens={(post.lens as Lens) ?? "consumer"}
+        initialDraft={JSON.parse(JSON.stringify(latestDraft(post.generations as never)))}
+        initialChosen={post.chosenCaption ?? ""}
       />
     </main>
   );

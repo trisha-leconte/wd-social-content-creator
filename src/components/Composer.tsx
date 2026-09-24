@@ -2,33 +2,30 @@
 
 import { useEffect, useState } from "react";
 import type { CardCandidate, Lens, PlatformKey } from "@/types";
-
-type Draft = {
-  captions: string[];
-  hooks: string[];
-  cta: string;
-  platformVariants: Record<PlatformKey, string>;
-  suggestedVisual: string;
-  storyVersion: string;
-};
+import type { Draft } from "@/lib/latestDraft";
 
 export function Composer({
   postId,
   initialNotes,
   initialLens,
+  initialDraft,
+  initialChosen,
 }: {
   postId: string;
   initialNotes: string;
   initialLens: Lens;
+  initialDraft: Draft | null;
+  initialChosen: string;
 }) {
   const [cards, setCards] = useState<CardCandidate[]>([]);
   const [card, setCard] = useState<CardCandidate | null>(null);
   const [notes, setNotes] = useState(initialNotes);
   const [lens, setLens] = useState<Lens>(initialLens);
-  const [draft, setDraft] = useState<Draft | null>(null);
-  const [chosen, setChosen] = useState("");
+  const [draft, setDraft] = useState<Draft | null>(initialDraft);
+  const [chosen, setChosen] = useState(initialChosen || initialDraft?.captions[0] || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
 
   useEffect(() => {
     fetch("/api/cards")
@@ -53,14 +50,32 @@ export function Composer({
     }
     setDraft(body.draft);
     setChosen(body.draft.captions[0]);
+    void saveChosen(body.draft.captions[0]);
+  }
+
+  /**
+   * Persist the chosen caption as soon as the user moves on, rather than
+   * only at "Mark posted". Closing the tab mid-edit used to discard it.
+   */
+  async function saveChosen(caption: string) {
+    if (!caption.trim()) return;
+    setSaved("saving");
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chosenCaption: caption }),
+      });
+      setSaved(res.ok ? "saved" : "idle");
+      if (!res.ok) setError("Your caption wasn't saved. Check your connection and try again.");
+    } catch {
+      setSaved("idle");
+      setError("Couldn't reach the server, so that edit isn't saved yet.");
+    }
   }
 
   async function markPosted() {
-    await fetch(`/api/posts/${postId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chosenCaption: chosen }),
-    });
+    await saveChosen(chosen);
     await fetch(`/api/posts/${postId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -133,7 +148,7 @@ export function Composer({
               {draft.captions.map((c, i) => (
                 <button
                   key={i}
-                  onClick={() => setChosen(c)}
+                  onClick={() => { setChosen(c); void saveChosen(c); }}
                   className={`whitespace-pre-line rounded border p-3 text-left text-sm ${
                     chosen === c ? "border-living bg-green-50" : "border-stone-200"
                   }`}
@@ -144,10 +159,14 @@ export function Composer({
             </div>
             <textarea
               value={chosen}
-              onChange={(e) => setChosen(e.target.value)}
+              onChange={(e) => { setChosen(e.target.value); setSaved("idle"); }}
+              onBlur={(e) => void saveChosen(e.target.value)}
               rows={10}
               className="mt-3 w-full whitespace-pre-line rounded border border-stone-300 p-3 text-sm"
             />
+            <p className="mt-1 text-xs text-stone-500">
+              {saved === "saving" ? "Saving…" : saved === "saved" ? "Saved ✓" : "Edits save when you click away."}
+            </p>
           </section>
 
           <section className="grid gap-3 text-sm sm:grid-cols-3">
