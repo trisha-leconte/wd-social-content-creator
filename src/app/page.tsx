@@ -14,7 +14,7 @@ export default async function TodayPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <nav className="mb-8 flex flex-wrap gap-4 text-sm text-stone-600">
-        {["captured", "proof", "coverage", "library", "calendar", "strategy"].map((r) => (
+        {["captured", "blog", "proof", "coverage", "library", "calendar", "strategy"].map((r) => (
           <Link key={r} href={`/${r}`} className="capitalize hover:text-stone-900">{r}</Link>
         ))}
       </nav>
