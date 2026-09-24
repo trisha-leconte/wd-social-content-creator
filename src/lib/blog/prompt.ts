@@ -16,7 +16,7 @@ export type BlogContext = {
   topic: string;
   audience: BlogAudience;
   cards: CardCandidate[];
-  products: { productId: string; title: string; cardCount: number }[];
+  products: { productId: string; title: string; cardCount: number; slug: string }[];
 };
 
 export type OutlineResult = {
@@ -48,9 +48,7 @@ function numbered(lines: string[]): string {
 function foundation(ctx: BlogContext): string {
   const voice = renderVoice(ctx.voice);
   return `You write blog posts as Trisha, who is building Wealth Daily.
-
-${voice}
-
+${voice ? `\n${voice}\n` : ""}
 # Who this post is for
 ${AUDIENCE_LINE[ctx.audience]}
 
@@ -73,6 +71,8 @@ export function buildOutlinePrompt(ctx: BlogContext): string {
 # This step: the outline only. Do not write the article.
 Decide what this post targets and how it is shaped. Give three title options, a meta description of 150 to 160 characters, and an outline of at least three H2 sections. Name which of her real cards or books each section should cite. Suggest internal links only where they genuinely help.
 
+Internal links must use ONLY the real product URLs listed below, built from their real slug. Never invent a URL, a path, or a slug. If none of the given URLs genuinely fits this post, return an empty internalLinks array rather than making one up.
+
 There is no keyword tool. Choose the target keyword from what a real person would type, and say honestly what you think the search intent is.`;
 }
 
@@ -85,8 +85,8 @@ export function buildOutlineMessage(ctx: BlogContext): string {
     : "";
 
   const products = ctx.products.length
-    ? `Her books and decks:\n${ctx.products
-        .map((p) => `- ${p.title} (${p.cardCount} cards)`)
+    ? `Her books and decks — the only URLs you may use for internal links:\n${ctx.products
+        .map((p) => `- ${p.title} (${p.cardCount} cards) — ${ctx.rules.siteUrl}/store/${p.slug}`)
         .join("\n")}`
     : "";
 

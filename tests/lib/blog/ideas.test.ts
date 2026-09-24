@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { mineIdeas } from "@/lib/blog/ideas";
 
 const DECKS = [
-  { productId: "p1", title: "The Science of Getting Rich", cardCount: 84 },
-  { productId: "p2", title: "The Man in the Mirror", cardCount: 60 },
-  { productId: "p3", title: "Empty Book", cardCount: 0 },
+  { productId: "p1", title: "The Science of Getting Rich", cardCount: 84, slug: "science-of-getting-rich" },
+  { productId: "p2", title: "The Man in the Mirror", cardCount: 60, slug: "man-in-the-mirror" },
+  { productId: "p3", title: "Empty Book", cardCount: 0, slug: "empty-book" },
 ];
 
 describe("mineIdeas", () => {

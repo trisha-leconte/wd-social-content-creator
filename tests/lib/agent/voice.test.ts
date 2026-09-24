@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { renderVoice, type VoiceProfile } from "@/lib/agent/voice";
 
 const FULL: VoiceProfile = {
+  oneStory: "I spent years consuming personal development and calling it growth.",
   whyItExists: "I built the thing I needed to start trusting myself again.",
   beliefs: ["Stop trying to convince yourself to believe. Build evidence."],
   enemy: "Passive consumption. Knowing without doing.",
@@ -14,6 +15,7 @@ const FULL: VoiceProfile = {
 describe("renderVoice", () => {
   it("renders every section it is given", () => {
     const v = renderVoice(FULL);
+    expect(v).toContain("I spent years consuming personal development");
     expect(v).toContain("I built the thing I needed");
     expect(v).toContain("Build evidence.");
     expect(v).toContain("Knowing without doing.");
@@ -37,5 +39,16 @@ describe("renderVoice", () => {
   it("puts why-it-exists before the vocabulary lists", () => {
     const v = renderVoice(FULL);
     expect(v.indexOf("Why this exists")).toBeLessThan(v.indexOf("Her vocabulary"));
+  });
+
+  it("renders the one story as the first section, before why-it-exists", () => {
+    const v = renderVoice(FULL);
+    expect(v.indexOf("# The one story every post tells")).toBe(0);
+    expect(v.indexOf("# The one story every post tells")).toBeLessThan(v.indexOf("Why this exists"));
+  });
+
+  it("omits the one story section when it is absent", () => {
+    const v = renderVoice({ enemy: "Passive consumption." });
+    expect(v).not.toContain("# The one story every post tells");
   });
 });

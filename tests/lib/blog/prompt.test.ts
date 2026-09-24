@@ -9,6 +9,7 @@ import {
 
 const CTX: BlogContext = {
   voice: {
+    oneStory: "I spent years consuming personal development and calling it growth.",
     whyItExists: "I built the thing I needed to start trusting myself again.",
     beliefs: ["Stop trying to convince yourself to believe. Build evidence."],
     enemy: "Passive consumption. Knowing without doing.",
@@ -27,7 +28,9 @@ const CTX: BlogContext = {
   cards: [
     { activityId: "a1", productId: "p1", text: "Give a genuine compliment to someone you don't know.", productTitle: "Love Your Person", chapterTitle: "Notice Them" },
   ],
-  products: [{ productId: "p1", title: "The Science of Getting Rich", cardCount: 84 }],
+  products: [
+    { productId: "p1", title: "The Science of Getting Rich", cardCount: 84, slug: "science-of-getting-rich" },
+  ],
 };
 
 const OUTLINE = {
@@ -51,6 +54,21 @@ describe("buildOutlinePrompt", () => {
     const p = buildOutlinePrompt(CTX);
     expect(p).toContain("I built the thing I needed");
     expect(p).toContain("Knowing without doing.");
+  });
+
+  it("carries the one story — the belief profile the social agent also shares", () => {
+    const p = buildOutlinePrompt(CTX);
+    expect(p).toContain("I spent years consuming personal development and calling it growth.");
+  });
+
+  it("forbids inventing internal link URLs", () => {
+    const p = buildOutlinePrompt(CTX);
+    expect(p).toMatch(/never invent a url|only the real product urls/i);
+  });
+
+  it("does not leave a blank-line gap when the voice profile is empty", () => {
+    const p = buildOutlinePrompt({ ...CTX, voice: {} });
+    expect(p).not.toMatch(/\n\n\n/);
   });
 
   it("carries the blog structure and content rules", () => {
@@ -97,6 +115,11 @@ describe("buildOutlineMessage", () => {
   it("says plainly when there is no catalogue available", () => {
     const m = buildOutlineMessage({ ...CTX, cards: [], products: [] });
     expect(m).toMatch(/no catalogue|not connected|nothing to cite/i);
+  });
+
+  it("builds a real URL from the product's slug rather than leaving one to invent", () => {
+    const m = buildOutlineMessage(CTX);
+    expect(m).toContain("https://wealthdailyapp.com/store/science-of-getting-rich");
   });
 });
 

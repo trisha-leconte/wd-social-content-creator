@@ -26,6 +26,25 @@ describe("PATCH /api/strategy with blog fields", () => {
     );
   });
 
+  it("upserts so a save creates the document when the blog profile has not been seeded yet", async () => {
+    // On an unseeded database, findOneAndUpdate without upsert returns null
+    // with a 200 — the UI reports "Saved" while nothing was persisted. This
+    // asserts the fix: the options passed must request an upsert.
+    findOneAndUpdate.mockResolvedValue({ structureRules: ["x"] });
+    const { PATCH } = await import("@/app/api/strategy/route");
+    await PATCH(
+      new Request("http://x/api/strategy", {
+        method: "PATCH",
+        body: JSON.stringify({ blog: { structureRules: ["x"] } }),
+      })
+    );
+    expect(findOneAndUpdate).toHaveBeenCalledWith(
+      { singleton: "the-one" },
+      expect.objectContaining({ structureRules: ["x"] }),
+      expect.objectContaining({ upsert: true, new: true })
+    );
+  });
+
   it("ignores blog fields that are not editable rules", async () => {
     findOneAndUpdate.mockResolvedValue({});
     const { PATCH } = await import("@/app/api/strategy/route");

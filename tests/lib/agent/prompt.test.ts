@@ -32,6 +32,12 @@ describe("buildSystemPrompt", () => {
     expect(buildSystemPrompt(CTX)).toContain("I spent years consuming personal development.");
   });
 
+  it("carries the one story exactly once, not duplicated with renderVoice's own section", () => {
+    const p = buildSystemPrompt(CTX);
+    const occurrences = p.split(CTX.profile.oneStory).length - 1;
+    expect(occurrences).toBe(1);
+  });
+
   it("names the bucket and what it is not", () => {
     const p = buildSystemPrompt(CTX);
     expect(p).toContain("I'M LIVING IT");

@@ -35,6 +35,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const post = await BlogPost.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     return NextResponse.json({ post });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+    // Only a Mongoose ValidationError means the request itself was bad
+    // input — everything else (a dropped connection, a replica-set
+    // failover, any other transient Mongo failure) is a server problem,
+    // not something the caller can fix by sending different data.
+    if ((e as Error).name === "ValidationError") {
+      return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+    }
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

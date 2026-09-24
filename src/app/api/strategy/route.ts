@@ -23,6 +23,7 @@ export async function PATCH(request: Request) {
     );
     const blog = await BlogProfile.findOneAndUpdate({ singleton: "the-one" }, blogUpdate, {
       new: true,
+      upsert: true,
     });
     return NextResponse.json({ blog });
   }

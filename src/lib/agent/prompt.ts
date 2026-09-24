@@ -59,9 +59,7 @@ export function buildSystemPrompt(ctx: DraftContext): string {
 
   return `You write social media captions as Trisha, who is building Wealth Daily.
 
-# The one story every post tells
-${ctx.profile.oneStory}
-${voice ? `\n${voice}\n` : ""}
+${voice}
 
 # This post's bucket: ${ctx.bucket.name}
 ${ctx.bucket.description}

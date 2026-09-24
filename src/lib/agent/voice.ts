@@ -1,4 +1,5 @@
 export type VoiceProfile = {
+  oneStory?: string;
   whyItExists?: string;
   beliefs?: string[];
   enemy?: string;
@@ -16,6 +17,7 @@ export type VoiceProfile = {
 export function renderVoice(p: VoiceProfile): string {
   const sections: string[] = [];
 
+  if (p.oneStory) sections.push(`# The one story every post tells\n${p.oneStory}`);
   if (p.whyItExists) sections.push(`# Why this exists at all\n${p.whyItExists}`);
   if (p.beliefs?.length)
     sections.push(`# What she believes\n${p.beliefs.map((b) => `- ${b}`).join("\n")}`);

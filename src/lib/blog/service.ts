@@ -46,6 +46,7 @@ export async function buildBlogContext(
 
   return {
     voice: {
+      oneStory: strategy?.oneStory,
       whyItExists: strategy?.whyItExists,
       beliefs: strategy?.beliefs,
       enemy: strategy?.enemy,

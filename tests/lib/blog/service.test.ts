@@ -27,7 +27,11 @@ describe("buildBlogContext", () => {
 
   it("takes voice from the StrategyProfile and rules from the BlogProfile", async () => {
     strategyFindOne.mockReturnValue({
-      lean: () => ({ enemy: "Passive consumption.", wordsSheNeverUses: ["quantum leap"] }),
+      lean: () => ({
+        oneStory: "I spent years consuming personal development.",
+        enemy: "Passive consumption.",
+        wordsSheNeverUses: ["quantum leap"],
+      }),
     });
     blogFindOne.mockReturnValue({
       lean: () => ({
@@ -42,6 +46,7 @@ describe("buildBlogContext", () => {
     const { buildBlogContext } = await import("@/lib/blog/service");
     const ctx = await buildBlogContext("a topic", "reader");
 
+    expect(ctx.voice.oneStory).toBe("I spent years consuming personal development.");
     expect(ctx.voice.enemy).toBe("Passive consumption.");
     expect(ctx.voice.wordsSheNeverUses).toEqual(["quantum leap"]);
     expect(ctx.rules.structureRules).toEqual(["r"]);

@@ -96,7 +96,12 @@ describe("PATCH /api/blog/[id]", () => {
   it("rejects an invalid status rather than persisting it", async () => {
     findByIdAndUpdate.mockImplementation(async (id: string, update: Record<string, unknown>, opts: Record<string, unknown>) => {
       if (opts?.runValidators && "status" in update && !BLOG_STATUSES.includes(update.status as string)) {
-        throw new Error("BlogPost validation failed: status: `bogus` is not a valid enum value for path `status`.");
+        // Mirrors what Mongoose actually throws for a schema validation
+        // failure: an Error whose .name is "ValidationError" — the route
+        // must key off that name, not treat every failure as bad input.
+        const err = new Error("BlogPost validation failed: status: `bogus` is not a valid enum value for path `status`.");
+        err.name = "ValidationError";
+        throw err;
       }
       return { _id: id, ...update };
     });
@@ -111,6 +116,19 @@ describe("PATCH /api/blog/[id]", () => {
     );
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/not a valid enum value/);
+  });
+
+  it("returns 500, not 400, when the update fails for a reason that is not invalid input", async () => {
+    // A transient Mongo failure (dropped connection, replica-set failover,
+    // etc.) must not be reported to the user as bad input — it is not
+    // fixable by sending different data.
+    findByIdAndUpdate.mockRejectedValue(new Error("connection timed out"));
+
+    const { PATCH } = await import("@/app/api/blog/[id]/route");
+    const res = await PATCH(patchRequest({ chosenTitle: "New Title" }), PARAMS);
+
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toMatch(/connection timed out/);
   });
 
   it("still persists a valid status update with runValidators on", async () => {
