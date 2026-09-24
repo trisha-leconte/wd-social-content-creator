@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildFieldPayload } from "@/lib/fieldPayload";
 
 export function EditableList({ label, field, initial }: { label: string; field: string; initial: string[] }) {
   const [lines, setLines] = useState(initial.join("\n"));
@@ -9,10 +10,7 @@ export function EditableList({ label, field, initial }: { label: string; field: 
   async function save() {
     setState("saving");
     const value = lines.split("\n").map((l) => l.trim()).filter(Boolean);
-    // "blog.structureRules" becomes { blog: { structureRules: [...] } } so one
-    // endpoint can serve both profiles.
-    const [head, tail] = field.split(".");
-    const payload = tail ? { [head]: { [tail]: value } } : { [head]: value };
+    const payload = buildFieldPayload(field, value);
     await fetch("/api/strategy", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
