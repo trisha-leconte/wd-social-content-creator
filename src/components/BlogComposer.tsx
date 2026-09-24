@@ -24,28 +24,60 @@ export function BlogComposer({ initial }: { initial: Post }) {
   const [busy, setBusy] = useState<null | "outline" | "draft">(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function parseJson(res: Response): Promise<{ error?: string; post?: Post } | null> {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
   async function run(action: "outline" | "draft") {
     setBusy(action);
     setError(null);
-    const res = await fetch(`/api/blog/${post._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    setBusy(null);
-    const body = await res.json();
-    if (!res.ok) return setError(body.error);
-    setPost(body.post);
+    try {
+      const res = await fetch(`/api/blog/${post._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const body = await parseJson(res);
+      if (!res.ok) {
+        setError(
+          body?.error ??
+            "The server returned an unreadable response. Wait a moment and try again."
+        );
+        return;
+      }
+      setPost(body!.post!);
+    } catch {
+      setError("Could not reach the server. Check your connection and try again.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function save(patch: Partial<Post>) {
-    const res = await fetch(`/api/blog/${post._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
-    const body = await res.json();
-    if (res.ok) setPost(body.post);
+    setError(null);
+    try {
+      const res = await fetch(`/api/blog/${post._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const body = await parseJson(res);
+      if (!res.ok) {
+        setError(
+          body?.error
+            ? `Your change wasn't saved: ${body.error}`
+            : "Your change wasn't saved — the server returned an unreadable response. Try again."
+        );
+        return;
+      }
+      setPost(body!.post!);
+    } catch {
+      setError("Your change wasn't saved — could not reach the server. Check your connection and try again.");
+    }
   }
 
   return (
