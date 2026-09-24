@@ -8,10 +8,15 @@ export function EditableList({ label, field, initial }: { label: string; field: 
 
   async function save() {
     setState("saving");
+    const value = lines.split("\n").map((l) => l.trim()).filter(Boolean);
+    // "blog.structureRules" becomes { blog: { structureRules: [...] } } so one
+    // endpoint can serve both profiles.
+    const [head, tail] = field.split(".");
+    const payload = tail ? { [head]: { [tail]: value } } : { [head]: value };
     await fetch("/api/strategy", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: lines.split("\n").map((l) => l.trim()).filter(Boolean) }),
+      body: JSON.stringify(payload),
     });
     setState("saved");
   }
