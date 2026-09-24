@@ -8,6 +8,30 @@ import { slugify } from "./slug";
 import type { BlogContext } from "./prompt";
 import type { BlogAudience } from "@/models/BlogPost";
 
+/**
+ * Thrown when a postId does not resolve to a document. User-fixable in the
+ * sense that it means a stale link/bad id, not a generation failure — the
+ * API route maps this to 404.
+ */
+export class PostNotFoundError extends Error {
+  constructor(message = "That post no longer exists.") {
+    super(message);
+    this.name = "PostNotFoundError";
+  }
+}
+
+/**
+ * Thrown when draftPost is asked to write a post that has not been
+ * outlined yet. User-fixable (run the outline step first, then draft) —
+ * the API route maps this to 400, not 502.
+ */
+export class OutlineRequiredError extends Error {
+  constructor(message = "Write the outline first.") {
+    super(message);
+    this.name = "OutlineRequiredError";
+  }
+}
+
 export async function buildBlogContext(
   topic: string,
   audience: BlogAudience
@@ -47,7 +71,7 @@ export async function buildBlogContext(
 export async function outlinePost(postId: string) {
   await dbConnect();
   const post = await BlogPost.findById(postId);
-  if (!post) throw new Error("That post no longer exists.");
+  if (!post) throw new PostNotFoundError();
 
   const ctx = await buildBlogContext(post.topic, post.audience);
   const outline = await generateOutline(ctx);
@@ -87,8 +111,8 @@ function findMissingHeadings(outline: { heading: string }[], bodyMarkdown: strin
 export async function draftPost(postId: string) {
   await dbConnect();
   const post = await BlogPost.findById(postId);
-  if (!post) throw new Error("That post no longer exists.");
-  if (!post.outline?.length) throw new Error("Write the outline first.");
+  if (!post) throw new PostNotFoundError();
+  if (!post.outline?.length) throw new OutlineRequiredError();
 
   const ctx = await buildBlogContext(post.topic, post.audience);
   const article = await generateArticle(ctx, {

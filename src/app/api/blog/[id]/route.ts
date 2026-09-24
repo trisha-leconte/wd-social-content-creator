@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUserId } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
-import { draftPost, outlinePost } from "@/lib/blog/service";
+import { draftPost, outlinePost, OutlineRequiredError, PostNotFoundError } from "@/lib/blog/service";
 import { slugify } from "@/lib/blog/slug";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -15,6 +15,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.action === "outline") return NextResponse.json({ post: await outlinePost(id) });
     if (body.action === "draft") return NextResponse.json({ post: await draftPost(id) });
   } catch (e) {
+    // PostNotFoundError and OutlineRequiredError are user-fixable — a stale
+    // id, or drafting before outlining — not upstream generation faults, so
+    // they get their own status codes rather than falling into the generic
+    // "the model/API failed" 502.
+    if (e instanceof PostNotFoundError) return NextResponse.json({ error: e.message }, { status: 404 });
+    if (e instanceof OutlineRequiredError) return NextResponse.json({ error: e.message }, { status: 400 });
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
 
@@ -25,5 +31,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   );
   if (typeof body.chosenTitle === "string") update.slug = slugify(body.chosenTitle);
 
-  return NextResponse.json({ post: await BlogPost.findByIdAndUpdate(id, update, { new: true }) });
+  try {
+    const post = await BlogPost.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+    return NextResponse.json({ post });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }
